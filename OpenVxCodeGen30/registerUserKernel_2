@@ -1,0 +1,2 @@
+vx_status registerUserKernel(vx_context context){
+}
