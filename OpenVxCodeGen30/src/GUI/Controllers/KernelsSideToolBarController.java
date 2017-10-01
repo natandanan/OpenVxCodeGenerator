@@ -24,7 +24,7 @@ import BE.ThresholdKernel;
 import BE.UserKernel;
 import BE.father_Info;
 import GUI.Model.Graph;
-import GUI.Model.GraphModel;
+import GUI.Model.Model;
 import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
@@ -82,7 +82,7 @@ int kernelId = 0;
     private void LoadKernels(){
         
         Graph graph = Graph.getInstance();
-        GraphModel graphModel = graph.getGraphModel();
+        Model model = graph.getModel();
         DB_Kernels kernelsInfo = DB_Kernels.getInstance();
                 
                 
@@ -105,7 +105,7 @@ int kernelId = 0;
            public void handle(ActionEvent event) {
 
                  graph.beginUpdate();
-                 graphModel.addCell( kernelId++,new Kernel(E_Kernels_Name.colorConvert, kernelId));
+                 model.addCell( kernelId++,new Kernel(E_Kernels_Name.colorConvert, kernelId));
                  graph.endUpdate();
            }
        });
@@ -114,7 +114,7 @@ int kernelId = 0;
            public void handle(ActionEvent event) {
                E_Channel_Type channel = getChannelFromUser();
                graph.beginUpdate();
-               graphModel.addCell( kernelId++,new ChannelExtractKernel(E_Kernels_Name.channelExtract, kernelId, channel));
+               model.addCell( kernelId++,new ChannelExtractKernel(E_Kernels_Name.channelExtract, kernelId, channel));
                graph.endUpdate();
 
            }
@@ -123,7 +123,7 @@ int kernelId = 0;
            @Override
            public void handle(ActionEvent event) {
             graph.beginUpdate();
-            graphModel.addCell( kernelId++,new Kernel(E_Kernels_Name.EqualizeHist, kernelId));
+            model.addCell( kernelId++,new Kernel(E_Kernels_Name.EqualizeHist, kernelId));
             graph.endUpdate();
           }
        });
@@ -131,7 +131,7 @@ int kernelId = 0;
            @Override
            public void handle(ActionEvent event) {
             graph.beginUpdate();
-            graphModel.addCell( kernelId++,new Kernel(E_Kernels_Name.ChannelCombine,kernelId));
+            model.addCell( kernelId++,new Kernel(E_Kernels_Name.ChannelCombine,kernelId));
             graph.endUpdate();
            }
         });
@@ -139,7 +139,7 @@ int kernelId = 0;
            @Override
            public void handle(ActionEvent event) {
             graph.beginUpdate();
-            graphModel.addCell( kernelId++,new Kernel(E_Kernels_Name.Sobel3x3, kernelId));
+            model.addCell( kernelId++,new Kernel(E_Kernels_Name.Sobel3x3, kernelId));
             graph.endUpdate();
           }
        });
@@ -147,7 +147,7 @@ int kernelId = 0;
            @Override
            public void handle(ActionEvent event) {
             graph.beginUpdate();
-            graphModel.addCell( kernelId++,new Kernel(E_Kernels_Name.Magnitude, kernelId));
+            model.addCell( kernelId++,new Kernel(E_Kernels_Name.Magnitude, kernelId));
             graph.endUpdate();
           }
        });
@@ -157,7 +157,7 @@ int kernelId = 0;
             ConPolDialogResult res = getConvertDepthUserInput();
             if (res != null){
                 graph.beginUpdate();
-                graphModel.addCell( kernelId++,new ConvertDepthKernel(E_Kernels_Name.ConvertDepth
+                model.addCell( kernelId++,new ConvertDepthKernel(E_Kernels_Name.ConvertDepth
                                           ,kernelId,res.conPol,res.shift));
                 graph.endUpdate();
             }
@@ -167,7 +167,7 @@ int kernelId = 0;
            @Override
            public void handle(ActionEvent event) {
             graph.beginUpdate();
-            graphModel.addCell( kernelId++,new Kernel(E_Kernels_Name.Gaussian3x3, kernelId));
+            model.addCell( kernelId++,new Kernel(E_Kernels_Name.Gaussian3x3, kernelId));
             graph.endUpdate();
           }
        });
@@ -175,7 +175,7 @@ int kernelId = 0;
            @Override
            public void handle(ActionEvent event) {
             graph.beginUpdate();
-            graphModel.addCell( kernelId++,new Kernel(E_Kernels_Name.Phase, kernelId));
+            model.addCell( kernelId++,new Kernel(E_Kernels_Name.Phase, kernelId));
             graph.endUpdate();
           }
        }); 
@@ -186,10 +186,10 @@ int kernelId = 0;
             if (null != res){
                 graph.beginUpdate();
                 if (res.type.equals(E_Threshold_Type.VX_THRESHOLD_TYPE_BINARY))
-                    graphModel.addCell( kernelId++,new ThresholdKernel(E_Kernels_Name.Threshold
+                    model.addCell( kernelId++,new ThresholdKernel(E_Kernels_Name.Threshold
                                               ,kernelId,res.type,res.dataType,res.value));
                 else if (res.type.equals(E_Threshold_Type.VX_THRESHOLD_TYPE_RANGE))
-                    graphModel.addCell( kernelId++,new ThresholdKernel(E_Kernels_Name.Threshold
+                    model.addCell( kernelId++,new ThresholdKernel(E_Kernels_Name.Threshold
                                               ,kernelId,res.type,res.dataType,res.upper,res.lower));
                 graph.endUpdate();
             }
@@ -203,7 +203,7 @@ int kernelId = 0;
                  //Check if one of user inputs is missing
                  if (null == userKernelName) return;
                  graph.beginUpdate();
-                 graphModel.addCell( kernelId++,new UserKernel(E_Kernels_Name.UserKernel, userKernelName ,kernelId));
+                 model.addCell( kernelId++,new UserKernel(E_Kernels_Name.UserKernel, userKernelName ,kernelId));
                  graph.endUpdate();
                }catch(Exception ex){}
            }
@@ -220,7 +220,7 @@ int kernelId = 0;
              kernelsBox.getChildren().add(butt);
          }
     }
-   
+    
     private String getUserKernelCode(int kernelId){
 
         
@@ -247,7 +247,8 @@ int kernelId = 0;
         }
         
         return userKernelName;
-}      
+}
+        
     private E_Channel_Type getChannelFromUser(){
          
         ChoiceDialog<E_Channel_Type> dialog =
@@ -392,6 +393,7 @@ int kernelId = 0;
         else
             return null;
     }
+
     private boolean writeFunctionFile(String funcName, int kernelId){
         try{
         String fileName = funcName + "_"+ kernelId;
@@ -421,16 +423,16 @@ int kernelId = 0;
         
         //userKernelNode
         if (funcName.endsWith("Node"))
-                    textArea.setText("vx_node " + funcName + "{\n}");
+                    textArea.setText("vx_node " + funcName + "(){\n}");
         //InputValdiator
         if (funcName.endsWith("InputValdiator"))
-                    textArea.setText("vx_status " + funcName + "{\n}");
+                    textArea.setText("vx_status VX_CALLBACK " + funcName + "(){\n}");
         //OutputValdiator
         if (funcName.endsWith("OutputValdiator"))
-                    textArea.setText("vx_status " + funcName + "{\n}");
+                    textArea.setText("vx_status VX_CALLBACK " + funcName + "(){\n}");
         //HostSideFunction
         if (funcName.endsWith("HostSideFunction"))
-                    textArea.setText("vx_status " + funcName + "{\n}");
+                    textArea.setText("vx_status VX_CALLBACK " + funcName + "(){\n}");
         //registerUserKernel
         if (funcName.endsWith("registerUserKernel"))
                     textArea.setText("vx_status " + funcName + "(vx_context context)"+ "{\n}");

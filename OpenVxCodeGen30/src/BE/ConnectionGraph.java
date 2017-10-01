@@ -5,7 +5,6 @@
  */
 package BE;
 
-import GUI.Model.GraphInfo;
 import java.util.ArrayList;
 
 /**
@@ -63,6 +62,15 @@ public class ConnectionGraph {
                     return k; 
         }
         return null; 
+    }
+    
+    public static boolean findRoot(ArrayList<Connection> connections, Kernel father) {
+        for (Connection c :connections)
+            for (Kernel k: c.children)
+                if (father.equals(k))
+                   return false;
+    
+        return true;
     }
 
     /**

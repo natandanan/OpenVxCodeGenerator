@@ -108,15 +108,17 @@ public class XML2code {
         int varLocation= 0;
         String varName;
         
-        // in the first connection all the father kernels get input var name= input 
-        list.get(0).father.getInputVariablesNames().put(1,"input");
-
+        // in the first connection the father kernels get input var name= input 
+//        list.get(0).father.getInputVariablesNames().put(1,"input");
+        
         
         for (Connection c : list)
         {
-            
+             if (ConnectionGraph.findRoot(list, c.father))// for the root kernel the input var name is input
+                    c.father.getInputVariablesNames().put(1,"input");
+         
             for (Kernel k: c.children){
-                for (ParametersMap InInfo: k.getInputParameters()){
+                      for (ParametersMap InInfo: k.getInputParameters()){
                     if (c.father.getNumber() == InInfo.getFatherInfo().getFatherId()){// only if the current parameter is from the current son we update the lists
                         varLocation= InInfo.getFatherInfo().getFatherParameterLocation();
                         if (c.father.getOutputVariablesNames().get(varLocation) != null){
@@ -142,18 +144,23 @@ public class XML2code {
     private static void basicInitializeLines(ConnectionGraph graph) {
         try {
             
+            raf.writeBytes("#include <opencv2/opencv.hpp>\n" +
+"#include <stdio.h>\n" +
+"#include <string>\n" +
+"#include <stdio.h>\n" +
+"#include <NVX/nvx.h>\n" +
+"#include <NVX/nvx_opencv_interop.hpp>\n" +
+"#include <opencv2/opencv.hpp>\n" +
+"#include \"opencv_camera_display.h\"\n" +
+"#include \"opencv2/imgproc/imgproc.hpp\"\n" +
+"#include \"opencv2/highgui/highgui.hpp\"\n" +
+"#include <fstream>\n" +
+"#include <iostream>\n" +
+"using namespace cv;\n" +
+"using namespace std;\n");
+
+            raf.writeBytes("\n");
             
-            raf.writeBytes("#include \"opencv_camera_display.h\"\n"); 
-            raf.writeBytes("#include <VX/vx.h>\n"); 
-
-            raf.writeBytes("\n"); 
-
-            for (Connection con : graph.getConnections())
-                for (Kernel k: con.children)
-                    if (k.getName().equals(E_Kernels_Name.UserKernel)){
-                        readWrite_userKernelCode(((UserKernel) k));
-                        raf.writeBytes("\n"); 
-                    }            
             raf.writeBytes("#define ERROR_CHECK_STATUS( status ) { \\\n" +
                 "        vx_status status_ = (status); \\\n" +
                 "        if(status_ != VX_SUCCESS) { \\\n" +
@@ -171,7 +178,16 @@ public class XML2code {
                 "    }");
             
             raf.writeBytes("\n"); 
-
+            
+            for (Connection con : graph.getConnections())
+                for (Kernel k: con.children)
+                    if (k.getName().equals(E_Kernels_Name.UserKernel)){
+                        readWrite_userKernelCode(((UserKernel) k));
+                        raf.writeBytes("\n"); 
+            
+                    }
+            raf.writeBytes("\n");
+            
             raf.writeBytes("\n////////\n" +
                 "// log_callback function implements a mechanism to print log messages\n" +
                 "// from OpenVX framework onto console. The log_callback function can be\n" +
@@ -200,15 +216,24 @@ public class XML2code {
                 "        printf( \"ERROR: input has no video\\n\" );\n" +
                 "        return 1;\n" +
                 "    }\n" +
-                "    ERROR_CHECK_STATUS( registerUserKernel( context ) );\n"+
                 "    vx_uint32  width     = gui.GetWidth();\n" +
-                "    vx_uint32  height    = gui.GetHeight();"); 
+                "    vx_uint32  height    = gui.GetHeight();\n"+
+                "    vx_uint32  ksize= 7;\n"); 
             
 
             raf.writeBytes("\tvx_context context = vxCreateContext();\n");
 
             raf.writeBytes("\tvx_status status = VX_SUCCESS;\n");
 
+            for (Connection c: graph.getConnections())
+                if (ConnectionGraph.findRoot(graph.getConnections(), c.father)){// for the root kernel the input var name is input
+                    raf.writeBytes("\tvx_image input = vxCreateImage(context,"
+                            + " width,"
+                            + " height, "
+                            + c.father.getInputParameters().get(0).getInputParameter().getPrameterType("E_Image_Type").toString().trim()
+                            + ");\n");
+                }
+            
             raf.writeBytes("\tvx_image output = vxCreateImage(context,"
                     + " width,"
                     + " height, "
@@ -222,35 +247,7 @@ public class XML2code {
             e.printStackTrace();
         }    
     }
-    
-    private static ArrayList<String> moveFilePtr(int pos){
-        
-        String line;
-        ArrayList<String> restOfFile= new ArrayList<>();
-        try{
-            
-            raf.seek(0);
-        
-            for (int i=0; i< pos; i++){//move the ptr to the wanted line
-                raf.readLine();
-            }
-            
-            while((line= raf.readLine()) != null){// read the rest of the file, for case of writing in new ptr location
-                restOfFile.add(line);
-            }
-            
-            raf.seek(0);
-            for (int i=0; i< pos; i++){//move again the ptr to the wanted line
-                raf.readLine();
-            }
-        }
-        
-        catch (Exception e) {
-        }
-        
-        return restOfFile;
-    }
-
+      
     private static void KernelsCode(Kernel k) {
         try {
             
@@ -476,17 +473,35 @@ public class XML2code {
             
             currLine= "\tvxChannelCombineNode(graph, "+
                     kernel.getInputVariablesNames().get(1) +
-                    ", " +
-                    kernel.getInputVariablesNames().get(2)+                    
                     ", " ;
             
+           if (kernel.getInputVariablesNames().size() == 1 ){
+                currLine+= kernel.getInputVariablesNames().get(1)+
+                        ", "+
+                        kernel.getInputVariablesNames().get(1)+
+                        ", NULL, ";
+                currLine+= kernel.getOutputVariablesNames().get(5);
+            
+            
+                currLine+= ");\n";
+                
+                KernelscallLines.add(currLine);
+                
+                return;
+                
+           }
+           else
+                currLine+= kernel.getInputVariablesNames().get(2)+
+                        ", ";
+
+            
             if (!(kernel.getInputVariablesNames().size() > 2) )
-                currLine+= "null, ";
+                currLine+= "NULL, ";
             else
                 currLine+= kernel.getInputVariablesNames().get(3)+
                         ", ";
             if (!(kernel.getInputVariablesNames().size() > 3) )
-                currLine+= "null, ";
+                currLine+= "NULL, ";
             else
                 currLine+= kernel.getInputVariablesNames().get(4);
             
@@ -673,12 +688,12 @@ public class XML2code {
             if (! userKernel.getOutputVariablesNames().get(2).trim().equals("output"))// the current kernel is not the final output, might be not necessery because we can write the output withe all the other kernels output
                 declerationLine(userKernel, 2);
 
-            
-            currLine= "\t"+userKernel.getUserKernelName()+"(graph, "+
+            currLine= "\tERROR_CHECK_STATUS( registerUserKernel( context ) )";
+            currLine+= "\tuser"+userKernel.getUserKernelName()+"Node(graph, "+
                     userKernel.getInputVariablesNames().get(1) +
                     ", " +
                     userKernel.getOutputVariablesNames().get(2).trim()+
-                    ");\n";
+                    ", ksize);\n";
             
             KernelscallLines.add(currLine);
         }
@@ -708,9 +723,9 @@ public class XML2code {
                 "        cv_rgb_image_layout.stride_x   = 3;\n" +
                 "        cv_rgb_image_layout.stride_y   = gui.GetStride();\n" +
                 "        vx_uint8 * cv_rgb_image_buffer = gui.GetBuffer();\n" +
-                "        ERROR_CHECK_STATUS( vxAccessImagePatch( input_rgb_image, &cv_rgb_image_region, 0,\n" +
+                "        ERROR_CHECK_STATUS( vxAccessImagePatch( input, &cv_rgb_image_region, 0,\n" +
                 "                                                &cv_rgb_image_layout, ( void ** )&cv_rgb_image_buffer, VX_WRITE_ONLY ) );\n" +
-                "        ERROR_CHECK_STATUS( vxCommitImagePatch( input_rgb_image, &cv_rgb_image_region, 0,\n" +
+                "        ERROR_CHECK_STATUS( vxCommitImagePatch( input, &cv_rgb_image_region, 0,\n" +
                 "                                                &cv_rgb_image_layout, cv_rgb_image_buffer ) );\n" +
                 "        status = vxVerifyGraph(graph);\n" +
                 "\n" +
@@ -723,7 +738,7 @@ public class XML2code {
                 "                vx_imagepatch_addressing_t addr = { 0 };\n" +
                 "                void * ptr = NULL;\n" +
                 "                ERROR_CHECK_STATUS( vxAccessImagePatch( output, &rect, 0, &addr, &ptr, VX_READ_ONLY ) );\n" +
-                "                cv::Mat mat( height, width, CV_8U, ptr, addr.stride_y );\n" +
+                "                cv::Mat mat( height/2, width, CV_8U, ptr, addr.stride_y );\n" +
                 "                cv::imshow( \""
                     +  graphName
                     + "\", mat );\n" +
@@ -836,31 +851,29 @@ public class XML2code {
         
         
         if (Type == "VX_THRESHOLD_TYPE_BINARY"){
-            currLine= "\t" + 
-                    DataType.replace("_TYPE", "")
-                    + " binaryValue = "+
+            currLine= "\t"
+                    + "vx_int32 binaryValue = "+
                 binaryValue+ ";\n";
             declerationLines.add(currLine);
             currLine= "\tvxSetThresholdAttribute("+
                      thresholdName+
-                      ", X_THRESHOLD_THRESHOLD_VALUE, &binartValue," +
-                        "sizeof(binartValue));\n";
+                      ", VX_THRESHOLD_THRESHOLD_VALUE, &binaryValue," +
+                        "sizeof(binaryValue));\n";
             declerationLines.add(currLine);
         }
         else{
-            currLine= "\t" +
-                    DataType.replace("_TYPE", "")
-                    + " upper = "+
+            currLine= "\tvx_int32" +
+                    " upper = "+
                 upper+
                 ", lower = "+
                 lower+
                 ";\n";
             declerationLines.add(currLine);
-            currLine= "\tvxSetThresholdAttribute(t"+
+            currLine= "\tvxSetThresholdAttribute("+
                     thresholdName+
-                    ", VX_THRESHOLD_ATTRIBUTE_THRESHOLD_UPPER, &upper,\n" +
+                    ", VX_THRESHOLD_ATTRIBUTE_THRESHOLD_UPPER, &upper," +
                         "sizeof(upper));\n" +
-                        "vxSetThresholdAttribute("
+                        "\tvxSetThresholdAttribute("
                     + thresholdName
                     + ", VX_THRESHOLD_ATTRIBUTE_THRESHOLD_LOWER, &lower," +
                         "sizeof(lower));\n";

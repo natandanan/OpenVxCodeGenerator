@@ -8,8 +8,8 @@
   </information>
   <resources>
     <j2se version="1.6+" href="http://java.sun.com/products/autodl/j2se"/>
-    <jar href="OpenVxCodeGen30.jar" size="98483" download="eager" />
-    <jar href="lib\java-json.jar" size="84697" download="eager" />
+    <jar href="OpenVxCodeGen30.jar" size="99177" download="eager" />
+    <jar href="lib/java-json.jar" size="84697" download="eager" />
   </resources>
   <applet-desc  width="800" height="600" main-class="com.javafx.main.NoJavaFXFallback"  name="OpenVxCodeGen30" >
     <param name="requiredFXVersion" value="8.0+"/>

@@ -3,12 +3,8 @@
     <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="0"/>
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
         <group>
-            <file>file:/C:/Users/natan/Desktop/Senior%20Project/Dev/current%20version/OpenVxCodeGen30/OpenVxCodeGen30/src/DataProcessing/NodesToConnectionsConvertor.java</file>
-            <file>file:/C:/Users/natan/Desktop/Senior%20Project/Dev/current%20version/OpenVxCodeGen30/OpenVxCodeGen30/src/BE/NodeGraph.java</file>
-            <file>file:/C:/Users/natan/Desktop/Senior%20Project/Dev/current%20version/OpenVxCodeGen30/OpenVxCodeGen30/src/BE/Connection.java</file>
-            <file>file:/C:/Users/natan/Desktop/Senior%20Project/Dev/current%20version/OpenVxCodeGen30/OpenVxCodeGen30/src/DataProcessing/CellToNodeConvertor.java</file>
-            <file>file:/C:/Users/natan/Desktop/Senior%20Project/Dev/current%20version/OpenVxCodeGen30/OpenVxCodeGen30/src/BE/Node.java</file>
-            <file>file:/C:/Users/natan/Desktop/Senior%20Project/Dev/current%20version/OpenVxCodeGen30/OpenVxCodeGen30/src/BE/ConnectionGraph.java</file>
+            <file>file:/home/elyasaf/Downloads/OpenVxCodeGen30/src/CodeGeneration/XML2code.java</file>
+            <file>file:/home/elyasaf/Downloads/OpenVxCodeGen30/src/GUI/Controllers/KernelsSideToolBarController.java</file>
         </group>
     </open-files>
 </project-private>

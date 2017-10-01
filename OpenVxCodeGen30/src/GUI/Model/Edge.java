@@ -54,7 +54,7 @@ import static java.lang.Math.sqrt;
         line.addEventFilter(MouseEvent.MOUSE_CLICKED, (MouseEvent mouseEvent) -> {
             Graph graph = Graph.getInstance();
             graph.beginUpdate();
-            graph.getGraphModel().removeEdge(this);
+            graph.getModel().removeEdge(this);
             graph.endUpdate();
             this.target.removeAllParamMap(this.source);
             getChildren().remove(line);

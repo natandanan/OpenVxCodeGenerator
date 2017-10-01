@@ -120,6 +120,9 @@ return null;
 
     
     public void removeAllParamMap(Cell source){
+       // for (ParametersMap IP : this.kernel.getInputParameters())      
+          //  if (IP.getFatherInfo().getFatherId().equals(source.kernel.getNumber()))
+            //    this.kernel.getInputParameters().remove(IP);
         
         for (Iterator<ParametersMap> iterator = this.kernel.getInputParameters().iterator(); iterator.hasNext(); ) {
             ParametersMap value = iterator.next();
@@ -162,20 +165,21 @@ return null;
                         child.kernel.getInputParameters().remove(paramMap);
                         break;
                 }
-        graph.getGraphModel().removeCell(this);
+        graph.getModel().removeCell(this);
         graph.endUpdate();
     }
     
+   
     
     public void OnMouseClicked(MouseEvent event){
         if (event.getClickCount() == 2 && !event.isSecondaryButtonDown()){
             Cell targetCell = ((Cell)event.getSource());
-            Cell sourceCell = (Cell)graph.getGraphModel().getSource();
-                if (graph.getGraphModel().isSourceSelected()){ //if same kernel selcted - ignore
+            Cell sourceCell = (Cell)graph.getModel().getSource();
+                if (graph.getModel().isSourceSelected()){ //if same kernel selcted - ignore
                     if (sourceCell.equals(targetCell)) 
-                        graph.getGraphModel().setIsSourceSelected(false);
+                        graph.getModel().setIsSourceSelected(false);
                     else // else - create edge
-                        if (true)//!edgeAlreadyExist(sourceCell,targetCell))
+                        if (!edgeAlreadyExist(sourceCell,targetCell))
                         {
                                 // Create the custom dialog.
                                 javafx.scene.control.Dialog<Boolean> dialog = new javafx.scene.control.Dialog<>();
@@ -275,7 +279,7 @@ return null;
                                 
                                dialog.setResultConverter((ButtonType dialogButton) -> {
                                     if (dialogButton == createButtonType) {
-                                        Kernel src = graph.getGraphModel().getSource().getKernel();
+                                        Kernel src = graph.getModel().getSource().getKernel();
                                         CodeParameter pOut = new CodeParameter(
                                                 kernelsInfo.getParamLocationByParamName(src.getName(),(String)sourceParam.getValue()));
                                         pOut.addToSelectedType((E_Image_Type)paramTypeComBox.getValue());
@@ -296,7 +300,7 @@ return null;
                                         return true;
                                     }
                                     // if CANCEL option have been chosen 
-                                    graph.getGraphModel().setIsSourceSelected(false);
+                                    graph.getModel().setIsSourceSelected(false);
                                     return false;
                                 });
 
@@ -305,38 +309,38 @@ return null;
                                 res.ifPresent(stat -> {
                                     if (stat){
                                         graph.beginUpdate();
-                                        graph.getGraphModel().addEdge(graph.getGraphModel().getSource().getCellId(),
+                                        graph.getModel().addEdge(graph.getModel().getSource().getCellId(),
                                                                  targetCell.getCellId(),
                                                                  "(" +(String) sourceParam.getValue()+
                                                                  "," +(String) targetParam.getValue()
                                                                 +")");
                                         graph.endUpdate();                            
-                                        graph.getGraphModel().setIsSourceSelected(false);
+                                        graph.getModel().setIsSourceSelected(false);
                                         System.out.println("Done");
                                             System.out.println(targetCell.getKernel().toString());
                                     }
                                 });
                         }
                         else
-                             graph.getGraphModel().setIsSourceSelected(false);
+                             graph.getModel().setIsSourceSelected(false);
                 }
                 else {
-                    graph.getGraphModel().setSource(targetCell);
-                    graph.getGraphModel().setIsSourceSelected(true);
+                    graph.getModel().setSource(targetCell);
+                    graph.getModel().setIsSourceSelected(true);
                 }
         }
     }
         
     
-//    private boolean edgeAlreadyExist(Cell source,Cell target){
-//        
-//        for (Edge edge : graph.getGraphModel().getAllEdges()){
-//            if (edge.source == source && edge.target == target)
-//               return true; 
-//        } 
-//
-//        return false;
-//    }
+    private boolean edgeAlreadyExist(Cell source,Cell target){
+        /*
+        for (Edge edge : graph.getModel().getAllEdges()){
+            if (edge.source == source && edge.target == target)
+               return true; 
+        } 
+*/
+        return false;
+    }
     
     
     public void onMousePressedEventHandler(MouseEvent event) {

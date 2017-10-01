@@ -1,5 +1,17 @@
+#include <opencv2/opencv.hpp>
+#include <stdio.h>
+#include <string>
+#include <stdio.h>
+#include <NVX/nvx.h>
+#include <NVX/nvx_opencv_interop.hpp>
+#include <opencv2/opencv.hpp>
 #include "opencv_camera_display.h"
-#include <VX/vx.h>
+#include "opencv2/imgproc/imgproc.hpp"
+#include "opencv2/highgui/highgui.hpp"
+#include <fstream>
+#include <iostream>
+using namespace cv;
+using namespace std;
 
 #define ERROR_CHECK_STATUS( status ) { \
         vx_status status_ = (status); \
@@ -16,6 +28,7 @@
             exit(1); \
         } \
     }
+
 
 ////////
 // log_callback function implements a mechanism to print log messages
@@ -44,17 +57,19 @@ int main( int argc, char * argv[] )
         printf( "ERROR: input has no video\n" );
         return 1;
     }
-    ERROR_CHECK_STATUS( registerUserKernel( context ) );
     vx_uint32  width     = gui.GetWidth();
-    vx_uint32  height    = gui.GetHeight();	vx_context context = vxCreateContext();
+    vx_uint32  height    = gui.GetHeight();
+    vx_uint32  ksize= 7;
+	vx_context context = vxCreateContext();
 	vx_status status = VX_SUCCESS;
-	vx_image output = vxCreateImage(context, width, height, VX_DF_IMAGE_U8);
+	vx_image input = vxCreateImage(context, width, height, VX_DF_IMAGE_RGB);
+	vx_image output = vxCreateImage(context, width, height, VX_DF_IMAGE_RGB);
 	vx_graph graph = vxCreateGraph(context);
 
-	vx_image output_colorConvert_S16= vxCreateVirtualImage(graph, 0, 0, VX_DF_IMAGE_S16);
+	vx_image output_colorConvert_IYUV= vxCreateVirtualImage(graph, 0, 0, VX_DF_IMAGE_IYUV);
 
-	vxColorConvertNode(graph, input, output_colorConvert_S16);
-	vxPhaseNode(graph, output_colorConvert_S16, null, output);
+	vxColorConvertNode(graph, input, output_colorConvert_IYUV);
+	vxColorConvertNode(graph, output_colorConvert_IYUV, output);
 
   // Process the video sequence frame by frame until the end of sequence or aborted.
     for( int frame_index = 0; !gui.AbortRequested(); frame_index++ )
@@ -71,9 +86,9 @@ int main( int argc, char * argv[] )
         cv_rgb_image_layout.stride_x   = 3;
         cv_rgb_image_layout.stride_y   = gui.GetStride();
         vx_uint8 * cv_rgb_image_buffer = gui.GetBuffer();
-        ERROR_CHECK_STATUS( vxAccessImagePatch( input_rgb_image, &cv_rgb_image_region, 0,
+        ERROR_CHECK_STATUS( vxAccessImagePatch( input, &cv_rgb_image_region, 0,
                                                 &cv_rgb_image_layout, ( void ** )&cv_rgb_image_buffer, VX_WRITE_ONLY ) );
-        ERROR_CHECK_STATUS( vxCommitImagePatch( input_rgb_image, &cv_rgb_image_region, 0,
+        ERROR_CHECK_STATUS( vxCommitImagePatch( input, &cv_rgb_image_region, 0,
                                                 &cv_rgb_image_layout, cv_rgb_image_buffer ) );
         status = vxVerifyGraph(graph);
 
@@ -86,7 +101,7 @@ int main( int argc, char * argv[] )
                 vx_imagepatch_addressing_t addr = { 0 };
                 void * ptr = NULL;
                 ERROR_CHECK_STATUS( vxAccessImagePatch( output, &rect, 0, &addr, &ptr, VX_READ_ONLY ) );
-                cv::Mat mat( height, width, CV_8U, ptr, addr.stride_y );
+                cv::Mat mat( height/2, width, CV_8U, ptr, addr.stride_y );
                 cv::imshow( "Example", mat );
                 ERROR_CHECK_STATUS( vxCommitImagePatch( output, &rect, 0, &addr, ptr ) );
 

@@ -17,7 +17,7 @@ import java.util.ArrayList;
  */
 public class CellToNodeConvertor {
     public static NodeGraph convert(){
-        ArrayList<Cell> cells = (ArrayList<Cell>) Graph.getInstance().getGraphModel().getAllCells();
+        ArrayList<Cell> cells = (ArrayList<Cell>) Graph.getInstance().getModel().getAllCells();
         NodeGraph nodeGraph = new NodeGraph();
         
         //convert all cells to nodes - mapping each cell to the same palce in nodes list

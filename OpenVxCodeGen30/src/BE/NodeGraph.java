@@ -5,9 +5,9 @@
  */
 package BE;
 
+import BE.Node;
 import java.util.ArrayList;
 import BE.ImageInfo;
-import GUI.Model.GraphInfo;
 
 /**
  *

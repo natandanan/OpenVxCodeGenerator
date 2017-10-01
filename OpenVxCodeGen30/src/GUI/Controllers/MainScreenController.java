@@ -22,7 +22,7 @@ import GUI.Main;
 import GUI.Model.Graph;
 import DataProcessing.CellToNodeConvertor;
 import BE.NodeGraph;
-import DataProcessing.NodesToConnectionsConvertor;
+import DataProcessing.NodeGraph2ConnGraph;
 import java.awt.Desktop;
 import java.io.File;
 import java.net.URL;
@@ -58,7 +58,14 @@ public class MainScreenController implements Initializable {
     public void initialize(URL url, ResourceBundle rb) {
        //Create the base graph object
         Graph graph = Graph.getInstance();
+        
+        //TODO only for prototype 
+        //graph.setInfo(new GraphInfo("EqualizeHist", 150, 100));
+        
         mainScreen.setCenter(graph.getScrollPane());
+       //KernelBoxFlowPane kernelBox = new KernelBoxFlowPane();
+        //mainScreen.setRight(kernelBox.create(graph));
+        
     }
 
     public void GenButtonClick(ActionEvent event) {
@@ -67,7 +74,7 @@ public class MainScreenController implements Initializable {
         try {
                 
                 NodeGraph nGraph = CellToNodeConvertor.convert();
-                ConnectionGraph con_graph = NodesToConnectionsConvertor.fromNodesToConnections(nGraph);
+                ConnectionGraph con_graph = NodeGraph2ConnGraph.fromNodesToConnections(nGraph);
                 
                 
                 //Adding input image as paramater for first kernel
@@ -82,33 +89,39 @@ public class MainScreenController implements Initializable {
                 conList.get(0).father.addInputParameters(ipar);
 
                 
-                updateOutputImageType(conList);
+                updateOutputAndInputImagesType(conList);
                 
                
                 XMLfunctions.writeXml(con_graph);
                 con_graph = XMLfunctions.readFromXml();
-                xml2code.codeGenerator(con_graph);
+                XML2code.codeGenerator(con_graph);
                
-                //String[] args = new String[] {"/bin/bash", "-c", "make"}; //"with", "args"};
-                //Process proc = new ProcessBuilder(args).start();
+                String[] args = new String[] {"/bin/bash", "-c", "make"}; //"with", "args"};
+                Process proc = new ProcessBuilder(args).start();
                 
-                //args = new String[] {"/bin/bash", "-c", "./openVxCode"}; //"with", "args"};
+                args = new String[] {"/bin/bash", "-c", "python3 goproStream2.py"}; //"with", "args"};
+                proc = new ProcessBuilder(args).start();
+
+                Thread.sleep(4000);
+                
+                args = new String[] {"/bin/bash", "-c", "./openVxCode"}; //"with", "args"};
+                proc = new ProcessBuilder(args).start();
+
+                
+                //args = new String[] {"/bin/bash", "-c", "vlc goprofeed3.ts"}; //"with", "args"};
                 //proc = new ProcessBuilder(args).start();
-                
-                ///String[] args = new String[] {"/bin/bash", "-c", "gedit openVxCode.cpp"}; //"with", "args"};
-                //Process proc = new ProcessBuilder(args).start();
                                 
-                Desktop.getDesktop().open(new File("openVxCode.cpp"));
-                exit();
+                //Desktop.getDesktop().open(new File("openVxCode.cpp"));
+               // exit();
                 
             } catch (Exception ex) {
                 Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
             }
      }
 
-     private void updateOutputImageType(ArrayList<Connection> conList){
+     private void updateOutputAndInputImagesType(ArrayList<Connection> conList){
         javafx.scene.control.Dialog<Boolean> dialog = new javafx.scene.control.Dialog<>();
-        dialog.setHeaderText("Please choose output image type");
+        dialog.setHeaderText("Please choose output and input images type");
         dialog.initStyle(StageStyle.UTILITY);
         //Set the button types.
         ButtonType createButtonType = new ButtonType("Done", ButtonBar.ButtonData.OK_DONE);
@@ -120,28 +133,42 @@ public class MainScreenController implements Initializable {
         grid.setPadding(new Insets(20, 150, 10, 10));
         
         DB_Kernels kernelsInfo = DB_Kernels.getInstance(); 
-         E_Kernels_Name name = conList.get(conList.size()-1).children.get(0).getName();
+        E_Kernels_Name outputName = conList.get(conList.size()-1).children.get(0).getName();
         ComboBox outputTypes = new ComboBox(
                                    FXCollections.observableArrayList(
                                         kernelsInfo.getOptionalTypesByKernelName( 
-                                        name,
+                                        outputName,
                                         kernelsInfo.getParamLocationByParamName(
-                                            name,
-                                            kernelsInfo.getVarsNameListByKernelName(name,E_IO.output).get(0))
+                                            outputName,
+                                            kernelsInfo.getVarsNameListByKernelName(outputName,E_IO.output).get(0))
                                         )
                                    )
                                 );
         outputTypes.setPromptText("Output optional types");
-        grid.add(new Label("Output Type"), 0, 0);
-        grid.add(outputTypes, 1, 0);
+        grid.add(new Label("Output Type"), 0, 1);
+        grid.add(outputTypes, 1, 1);
         
+        
+        E_Kernels_Name inputName = conList.get(0).children.get(0).getName();
+        ComboBox inputTypes = new ComboBox(
+                                   FXCollections.observableArrayList(
+                                        kernelsInfo.getOptionalTypesByKernelName( 
+                                        inputName,
+                                        kernelsInfo.getParamLocationByParamName(
+                                            inputName,
+                                            kernelsInfo.getVarsNameListByKernelName(inputName,E_IO.input).get(0))
+                                        )
+                                   )
+                                );
+        inputTypes.setPromptText("Input optional types");
+        grid.add(new Label("Input Type"), 0, 0);
+        grid.add(inputTypes, 1, 0);
+        
+      
         dialog.getDialogPane().setContent(grid);
-        Platform.runLater(() -> outputTypes.requestFocus());
+        Platform.runLater(() -> inputTypes.requestFocus());
         dialog.setResultConverter((ButtonType dialogButton) -> {
-                                    if (dialogButton == createButtonType)                                 
-                                        return true;
-                                    else // if CANCEL option have been chosen 
-                                        return false;
+                            return dialogButton == createButtonType; // if CANCEL option have been chosen
                                 });
         Optional<Boolean> res = dialog.showAndWait();
         res.ifPresent(stat -> {
@@ -149,6 +176,9 @@ public class MainScreenController implements Initializable {
                                       //Updating Graph info
                                       Graph.getInstance().getInfo().setOutputImageInfo(
                                               new ImageInfo((E_Type) outputTypes.getValue())
+                                      );
+                                      Graph.getInstance().getInfo().setInputImageInfo(
+                                              new ImageInfo((E_Type) inputTypes.getValue())
                                       );
                                       Graph.getInstance().getInfo().setName("Example");
                                     }

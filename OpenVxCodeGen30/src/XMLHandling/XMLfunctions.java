@@ -39,6 +39,7 @@ import BE.ThresholdKernel;
 import BE.Kernel;
 import BE.DBParameter;
 import static BE.E_Kernels_Name.UserKernel;
+import BE.GraphInfo;
 import BE.ParametersMap;
 import BE.UserKernel;
 import BE.father_Info;
@@ -62,7 +63,6 @@ import org.json.XML;
 
 public class XMLfunctions {
  
-    private static URL url = null;
    // private static InputStream inputStream = null;  
 
     public static void writeXml(ConnectionGraph graph){
@@ -91,7 +91,8 @@ public class XMLfunctions {
          Element height = doc.createElement("pictureheight");
          height.setTextContent(String.valueOf(graph.getGraphInfo().getOutputImageInfo().getHeight()));
          XmlGraph.appendChild(height);*/
-
+         
+         
          Element outputType = doc.createElement("outputType");
          outputType.setTextContent(String.valueOf(graph.getGraphInfo().getOutputImageInfo().getType()));
          XmlGraph.appendChild(outputType);
@@ -115,8 +116,8 @@ public class XMLfunctions {
                 
                 W_XmlAddingkernelInfo(doc, father, c.father);
                 
-                if (findRoot(graph.getConnections(),c.father))// for the root of the graph we write also the input parameter
-                    father.appendChild(W_XmlRootFatherInputInfo(doc, c.father));
+                if (ConnectionGraph.findRoot(graph.getConnections(),c.father))// for the root of the graph we write also the input parameter
+                    father.appendChild(W_XmlRootFatherInputInfo(doc, graph.getGraphInfo(), c.father));
                 
                 father.appendChild(W_XmlOutputInfo(doc, c.father));
                 
@@ -354,7 +355,7 @@ public class XMLfunctions {
         }
 }
 
-    private static Element W_XmlRootFatherInputInfo(Document doc, Kernel k) {
+    private static Element W_XmlRootFatherInputInfo(Document doc,GraphInfo graphInfo, Kernel k) {
         Element kinputParameters= doc.createElement("inputParameters");
         Element kinputParameter= doc.createElement("inputParameter");
 
@@ -363,11 +364,16 @@ public class XMLfunctions {
             pName.setTextContent(String.valueOf(k.getInputParameters().get(0).getInputParameter().getLocation()));
             kinputParameter.appendChild(pName);
 
+            Element pType= doc.createElement("Type");
+            pType.setTextContent(String.valueOf(graphInfo.getInputImageInfo().getType().toString()));
+            kinputParameter.appendChild(pType);
+            /*
             for (E_Type type :k.getInputParameters().get(0).getInputParameter().getSelectedTypes()){
                 Element pType= doc.createElement("Type");
                 pType.setTextContent(type.toString());
                 kinputParameter.appendChild(pType);
             }
+*/
 
 //            if (k.getInputParameters().get(0).inputParameter.getChannelType() != null){
 //                Element pChannelType= doc.createElement("ChannelType");
@@ -625,10 +631,5 @@ public class XMLfunctions {
         return true;// the current kernel is not a father in any connection = he is the last kernel  
     }
 
-    private static boolean findRoot(ArrayList<Connection> connections, Kernel father) {
-        for (Connection c :connections)
-            if (father.equals(c.children))
-                return false;
-        return true;
-    }
+    
 }

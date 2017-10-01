@@ -1,18 +1,18 @@
 package GUI.Model;
 
 
+import BE.GraphInfo;
 import javafx.scene.Group;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.Pane;
-
 
 public class Graph {
 
     private static Graph instance = null;
     
-    private GraphModel graphModel;
+    private Model model;
 
-   // private Group canvas;
+    private Group canvas;
 
     private ZoomableScrollPane scrollPane;
     
@@ -22,7 +22,7 @@ public class Graph {
     
     
     protected Graph() {
-        this.graphModel = new GraphModel();
+        this.model = new Model();
         cellLayer = new Pane();
         scrollPane = new ZoomableScrollPane(cellLayer);
         scrollPane.setFitToWidth(true);
@@ -46,8 +46,8 @@ public class Graph {
         return this.cellLayer;
     }
 
-    public GraphModel getGraphModel() {
-        return graphModel;
+    public Model getModel() {
+        return model;
     }
 
     public void beginUpdate() {
@@ -56,14 +56,15 @@ public class Graph {
     public void endUpdate() {
 
         // add components to graph pane
-        getCellLayer().getChildren().addAll(graphModel.getAddedEdges());
-        getCellLayer().getChildren().addAll(graphModel.getAddedCells());
+        getCellLayer().getChildren().addAll(model.getAddedEdges());
+        getCellLayer().getChildren().addAll(model.getAddedCells());
 
         // remove components from graph pane
-        getCellLayer().getChildren().removeAll(graphModel.getRemovedCells());
-        getCellLayer().getChildren().removeAll(graphModel.getRemovedEdges());
+        getCellLayer().getChildren().removeAll(model.getRemovedCells());
+        getCellLayer().getChildren().removeAll(model.getRemovedEdges());
 
-        getGraphModel().merge();
+        getModel().merge();
+
     }
 
     public double getScale() {
